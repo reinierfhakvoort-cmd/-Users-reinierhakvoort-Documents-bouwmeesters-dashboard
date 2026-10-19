@@ -12,7 +12,7 @@ let chromium;
 try { ({ chromium } = await import('playwright')); }
 catch { ({ chromium } = createRequire(execSync('npm root -g').toString().trim() + '/')('playwright')); }
 
-const root = resolve(new URL('..', import.meta.url).pathname);
+const root = process.env.SITE_ROOT ? resolve(process.env.SITE_ROOT) : resolve(new URL('..', import.meta.url).pathname);
 const args = process.argv.slice(2);
 const out = args.shift();
 const flags = args.filter(a => a.startsWith('--')).map(a => a.slice(2));

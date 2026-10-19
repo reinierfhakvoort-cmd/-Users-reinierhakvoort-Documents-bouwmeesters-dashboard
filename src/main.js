@@ -41,12 +41,20 @@ const ctx = {
 
 // Modules: each builds its own part of the house. A broken module is skipped
 // so the rest of the house still renders.
-const MODULES = ['shell', 'zones/kitchen', 'zones/dining', 'zones/living', 'zones/front'];
+// Literal import() paths so the site can also be bundled into one file (tools/bundle.sh).
+const LOADERS = {
+  'shell': () => import('./shell.js'),
+  'zones/kitchen': () => import('./zones/kitchen.js'),
+  'zones/dining': () => import('./zones/dining.js'),
+  'zones/living': () => import('./zones/living.js'),
+  'zones/front': () => import('./zones/front.js'),
+};
+const MODULES = Object.keys(LOADERS);
 const only = params.get('only');
 for (const name of MODULES) {
   if (only && !only.split(',').includes(name.split('/').pop()) && name !== 'shell') continue;
   try {
-    const mod = await import(`./${name}.js${SHOT ? '?t=' + Date.now() : ''}`);
+    const mod = await LOADERS[name]();
     const group = new THREE.Group(); group.name = name;
     scene.add(group);
     await mod.build({ ...ctx, group });
