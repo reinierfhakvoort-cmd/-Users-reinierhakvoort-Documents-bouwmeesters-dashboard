@@ -155,26 +155,43 @@ function throwOver(S, t0, t1) {
   return mesh(gg, LM.throw);
 }
 
-// Lounge chair: dark wood sled frame with sweeping arms, cream boucle seat and back.
+// Lounge chair: wide dark-wood frame with flat C-curved side planks that sweep from the
+// back top down into a straight arm; cream boucle sling seat and reclined back.
 // Local frame: front = +z, width along x, origin at the floor centre.
+function sidePlank(t = 0.05, thick = 0.035) {
+  const curve = new THREE.CubicBezierCurve(new THREE.Vector2(-0.46, 0.84), new THREE.Vector2(-0.36, 0.5), new THREE.Vector2(-0.2, 0.43), new THREE.Vector2(0.05, 0.43));
+  const cpts = curve.getPoints(24);
+  cpts.push(new THREE.Vector2(0.44, 0.43));
+  const L = [], R = [];
+  for (let i = 0; i < cpts.length; i++) {
+    const a = cpts[Math.max(0, i - 1)], b = cpts[Math.min(cpts.length - 1, i + 1)];
+    let nx = -(b.y - a.y), ny = b.x - a.x; const l = Math.hypot(nx, ny); nx /= l; ny /= l;
+    L.push(new THREE.Vector2(cpts[i].x + nx * t / 2, cpts[i].y + ny * t / 2));
+    R.push(new THREE.Vector2(cpts[i].x - nx * t / 2, cpts[i].y - ny * t / 2));
+  }
+  const shape = new THREE.Shape([...L, ...R.reverse()]);
+  const g = new THREE.ExtrudeGeometry(shape, { depth: thick, bevelEnabled: true, bevelSize: 0.004, bevelThickness: 0.004, bevelSegments: 1 });
+  g.rotateY(-Math.PI / 2); // shape x -> local z, extrusion -> -x
+  g.translate(thick / 2, 0, 0);
+  return g;
+}
+
 function loungeChair() {
   const c = new THREE.Group();
-  const W = 0.36;
+  const W = 0.5;
   const frame = LM.walnutDark;
-  const tube = (pts, r = 0.022) => mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts.map(p => new THREE.Vector3(...p))), 40, r, 8, false), frame);
+  const sq = (x0, y0, z0, x1, y1, z1) => { const m = mesh(new THREE.BoxGeometry(x1 - x0, y1 - y0, z1 - z0), frame); m.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2); c.add(m); };
+  const pg = sidePlank();
   for (const sx of [-W, W]) {
-    // sweeping arm: from the back top, down the back, along under the arm to the front post
-    c.add(tube([[sx, 0.8, -0.44], [sx, 0.66, -0.36], [sx, 0.54, -0.18], [sx, 0.5, 0.08], [sx, 0.5, 0.3], [sx, 0.47, 0.4]], 0.024));
-    // front post and rear post
-    c.add(tube([[sx, 0.5, 0.38], [sx, 0.0, 0.36]], 0.022));
-    c.add(tube([[sx, 0.42, -0.32], [sx, 0.0, -0.34]], 0.022));
-    // floor runner + seat rail
-    c.add(tube([[sx, 0.02, -0.36], [sx, 0.02, 0.38]], 0.02));
-    c.add(tube([[sx, 0.27, -0.3], [sx, 0.3, 0.37]], 0.018));
+    const p = mesh(pg, frame); p.position.x = sx; c.add(p);
+    sq(sx - 0.02, 0, 0.32, sx + 0.02, 0.43, 0.36);      // front leg
+    sq(sx - 0.02, 0, -0.26, sx + 0.02, 0.5, -0.22);     // rear leg
+    sq(sx - 0.018, 0.17, -0.24, sx + 0.018, 0.21, 0.34); // side stretcher
   }
-  for (const z of [-0.3, 0.37]) c.add(tube([[-W, 0.28, z], [W, 0.28, z]], 0.018));
-  // seat sling cushion and reclined back cushion
-  const seat = rbox(0.68, 0.14, 0.66, 0.06, LM.boucle, 4); seat.position.set(0, 0.36, 0.04); seat.rotation.x = -0.06; c.add(seat);
-  const back = rbox(0.68, 0.56, 0.14, 0.06, LM.boucle, 4); back.position.set(0, 0.62, -0.3); back.rotation.x = -0.32; c.add(back);
+  sq(-W, 0.27, 0.3, W, 0.31, 0.34);
+  sq(-W, 0.27, -0.24, W, 0.31, -0.2);
+  sq(-0.02, 0.17, -0.24, 0.02, 0.21, 0.34);
+  const seat = rbox(0.94, 0.15, 0.62, 0.07, LM.boucle, 4); seat.position.set(0, 0.44, 0.06); seat.rotation.x = -0.07; c.add(seat);
+  const back = rbox(0.94, 0.6, 0.15, 0.07, LM.boucle, 4); back.position.set(0, 0.7, -0.26); back.rotation.x = -0.38; c.add(back);
   return c;
 }

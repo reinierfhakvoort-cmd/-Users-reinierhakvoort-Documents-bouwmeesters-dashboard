@@ -26,142 +26,12 @@ export const OPENINGS = {
   sconces: [4.6, 9.4],
 };
 
-// ---------- textures (shell-only variants) ----------
-const { makeNoise, paint, toTexture, canvas, rng, hex } = T;
-const mix = (a, b, t) => a + (b - a) * t;
-const mixc = (a, b, t) => [mix(a[0], b[0], t), mix(a[1], b[1], t), mix(a[2], b[2], t)];
-const clamp01 = v => Math.max(0, Math.min(1, v));
-
-// Warm limestone-like plaster (lime render): cloudy mottling + fine sand grain.
-function limePlaster({ base = 0xdccfbd, dark = 0xc8b8a0, seed = 3, size = 512, strength = 1 } = {}) {
-  const n = makeNoise(seed), B = hex(base), D = hex(dark);
-  const c = paint(size, size, (u, v) => {
-    const cloud = n.fbm(u * 5, v * 5, 5) * 0.5 + 0.5;
-    const streak = n.fbm(u * 2 + 4, v * 14, 4) * 0.5 + 0.5;
-    const grain = n.noise(u * 300, v * 300) * 0.5 + 0.5;
-    const t = clamp01((cloud * 0.6 + streak * 0.4 - 0.25) * 1.2 * strength);
-    const col = mixc(B, D, t);
-    const k = 1 + (grain - 0.5) * 0.05 * strength;
-    return col.map(ch => ch * k);
-  });
-  const g = c.getContext('2d'), r = rng(seed + 7);
-  for (let i = 0; i < 900 * strength; i++) { // travertine pits
-    g.fillStyle = `rgba(110,92,70,${0.08 + r() * 0.12})`;
-    g.beginPath(); g.ellipse(r() * size, r() * size, 0.6 + r() * 2.2, 0.4 + r() * 0.8, 0, 0, 7); g.fill();
-  }
-  return toTexture(c);
-}
-
-// Versailles parquet: square panels (1 m) with a framed border and a woven
-// diagonal lattice inside. tile = 2 panels; one texture covers 2 m.
-function versailles({ size = 2048, panel = 1.0, seed = 11 } = {}) {
-  const tile = panel * 2, px = size / tile, n = makeNoise(seed), r = rng(seed);
-  const L = hex(0xd2b08a), D = hex(0xb08a63);
-  // grain stripes along u for horizontal planks; we rotate the canvas per plank
-  const [gc, gg] = canvas(512, 64);
-  const gimg = gg.createImageData(512, 64);
-  for (let y = 0; y < 64; y++) for (let x = 0; x < 512; x++) {
-    const w = n.fbm(x / 140, y / 30, 3) * 0.8;
-    const s = Math.sin((y / 64 + w) * 9 * Math.PI) * 0.5 + 0.5;
-    const f = n.noise(x / 6, y / 1.5) * 0.5 + 0.5;
-    const t = clamp01(Math.pow(s, 2.5) * 0.5 + f * 0.25 + n.fbm(x / 90, y / 40, 2) * 0.35 + 0.1);
-    const c = mixc(L, D, t), i = (y * 512 + x) * 4;
-    gimg.data[i] = c[0]; gimg.data[i + 1] = c[1]; gimg.data[i + 2] = c[2]; gimg.data[i + 3] = 255;
-  }
-  gg.putImageData(gimg, 0, 0);
-  const [c, g] = canvas(size);
-  g.fillStyle = '#9c7b58'; g.fillRect(0, 0, size, size);
-  const plank = (x, y, len, wid, ang) => { // plank centred at x,y
-    g.save(); g.translate(x, y); g.rotate(ang);
-    g.drawImage(gc, r() * 300, r() * 20, 200, 40, -len / 2, -wid / 2, len, wid);
-    const tone = (r() - 0.5) * 0.22;
-    g.fillStyle = tone > 0 ? `rgba(255,240,215,${tone})` : `rgba(60,40,20,${-tone})`;
-    g.fillRect(-len / 2, -wid / 2, len, wid);
-    g.strokeStyle = 'rgba(70,50,30,0.45)'; g.lineWidth = 1.4; g.strokeRect(-len / 2, -wid / 2, len, wid);
-    g.restore();
-  };
-  const bw = 0.075 * px; // border plank width
-  for (let pi = 0; pi < 2; pi++) for (let pj = 0; pj < 2; pj++) {
-    const X = pi * panel * px, Y = pj * panel * px, P = panel * px;
-    g.save(); g.beginPath(); g.rect(X + bw, Y + bw, P - 2 * bw, P - 2 * bw); g.clip();
-    // diagonal lattice: strips at +/-45 deg every s, squares in between with alternating grain
-    const s = P / 3.0 / Math.SQRT2 * 1.0, sw = bw * 0.75;
-    const cx = X + P / 2, cy = Y + P / 2;
-    for (let a = -6; a <= 6; a++) for (let b = -6; b <= 6; b++) {
-      // cell centre in rotated lattice coords
-      const lu = (a + 0.5) * s * Math.SQRT2, lv = (b + 0.5) * s * Math.SQRT2;
-      const x = cx + (lu - lv) / Math.SQRT2, y = cy + (lu + lv) / Math.SQRT2;
-      const cell = s * Math.SQRT2 - sw;
-      // each cell filled with 3 short planks, direction alternates (woven look)
-      const ang = Math.PI / 4 + ((a + b) & 1 ? Math.PI / 2 : 0);
-      for (let k = -1; k <= 1; k++) {
-        const off = k * cell / 3;
-        plank(x + Math.cos(ang + Math.PI / 2) * off, y + Math.sin(ang + Math.PI / 2) * off, cell, cell / 3, ang);
-      }
-    }
-    for (let a = -6; a <= 6; a++) { // the lattice strips
-      for (const dir of [1, -1]) {
-        for (let b = -6; b <= 6; b++) {
-          const l = a * s * Math.SQRT2, m = (b + 0.5) * s * Math.SQRT2;
-          const lu = dir > 0 ? l : m, lv = dir > 0 ? m : l;
-          const x = cx + (lu - lv) / Math.SQRT2, y = cy + (lu + lv) / Math.SQRT2;
-          plank(x, y, s * Math.SQRT2 - sw, sw, dir > 0 ? -Math.PI / 4 : Math.PI / 4);
-        }
-      }
-    }
-    g.restore();
-    // border frame
-    plank(X + P / 2, Y + bw / 2, P - 2 * bw, bw, 0);
-    plank(X + P / 2, Y + P - bw / 2, P - 2 * bw, bw, 0);
-    plank(X + bw / 2, Y + P / 2, P, bw, Math.PI / 2);
-    plank(X + P - bw / 2, Y + P / 2, P, bw, Math.PI / 2);
-  }
-  const t = toTexture(c, { anisotropy: 16 });
-  t.repeat.set(1 / tile, 1 / tile);
+// Textures are pre-baked by assets/shell/gen_textures.py (fast page load).
+const tex = async (name, rep = [1, 1], aniso = 8) => {
+  const t = await T.imageAsync(`./assets/shell/${name}`);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rep[0], rep[1]); t.anisotropy = aniso;
   return t;
-}
-
-// Soft, misty garden painted on a canvas (seen through the glazing). Each layer is
-// drawn sharp on a small canvas and blurred once when composited (fast).
-function gardenTexture() {
-  const W = 1024, H = 512, [c, g] = canvas(W, H), r = rng(77);
-  const sky = g.createLinearGradient(0, 0, 0, H);
-  sky.addColorStop(0, '#eef0ea'); sky.addColorStop(0.55, '#e3e7dc'); sky.addColorStop(1, '#d6dccb');
-  g.fillStyle = sky; g.fillRect(0, 0, W, H);
-  const layer = (blur, draw) => {
-    const [lc, lg] = canvas(W, H); draw(lg);
-    g.filter = `blur(${blur}px)`; g.drawImage(lc, 0, 0); g.filter = 'none';
-  };
-  const blobs = (lg, n, y0, y1, rx, ry, cols, a) => {
-    for (let i = 0; i < n; i++) {
-      lg.globalAlpha = a; lg.fillStyle = cols[i % cols.length];
-      lg.beginPath(); lg.ellipse(r() * W, H * (y0 + r() * (y1 - y0)), rx[0] + r() * rx[1], ry[0] + r() * ry[1], 0, 0, 7); lg.fill();
-    }
-  };
-  layer(9, lg => blobs(lg, 140, 0.25, 0.65, [20, 60], [20, 50], ['#b8c2a8', '#a9b597', '#c4cbb5'], 0.5));
-  layer(4, lg => blobs(lg, 160, 0.1, 0.65, [10, 35], [9, 28], ['#7f8f64', '#93a176', '#6d7d55', '#a3ae88'], 0.55));
-  layer(0.8, lg => {
-    lg.globalAlpha = 0.75; lg.strokeStyle = '#5d5444';
-    const branch = (x, y, ang, len, w, d) => {
-      if (d > 6 || w < 0.4) return;
-      const x2 = x + Math.cos(ang) * len, y2 = y + Math.sin(ang) * len;
-      lg.lineWidth = w; lg.beginPath(); lg.moveTo(x, y); lg.quadraticCurveTo(x + (r() - 0.5) * len * 0.3, (y + y2) / 2, x2, y2); lg.stroke();
-      const k = 1 + (r() < 0.6 ? 1 : 0);
-      for (let i = 0; i < k; i++) branch(x2, y2, ang + (r() - 0.5) * 0.9, len * (0.7 + r() * 0.2), w * 0.68, d + 1);
-    };
-    for (const tx of [190, 450, 660, 850]) for (let s = 0; s < 3; s++) branch(tx + (r() - 0.5) * 40, H * 0.86, -Math.PI / 2 + (r() - 0.5) * 0.5, 55 + r() * 30, 3 + r() * 2, 0);
-  });
-  layer(2.5, lg => blobs(lg, 260, 0.05, 0.5, [4, 15], [3, 11], ['#73835a', '#8d9b70', '#5f6f49', '#a2ad86'], 0.45));
-  layer(2, lg => {
-    lg.fillStyle = '#62714a'; lg.fillRect(0, H * 0.74, W, H * 0.12);
-    blobs(lg, 300, 0.74, 0.78, [5, 12], [4, 7], ['#55653f', '#6e7d52', '#7d8b5e'], 0.8);
-    lg.globalAlpha = 1;
-    const lawn = lg.createLinearGradient(0, H * 0.85, 0, H);
-    lawn.addColorStop(0, '#8b9a64'); lawn.addColorStop(1, '#7a8a56');
-    lg.fillStyle = lawn; lg.fillRect(0, H * 0.85, W, H * 0.15);
-  });
-  return toTexture(c, { repeat: [1, 1] });
-}
+};
 
 export async function build(ctx) {
   const { group, renderer, scene } = ctx;
@@ -170,15 +40,13 @@ export async function build(ctx) {
   const O = OPENINGS;
 
   // ---------- materials ----------
-  const plasterTex = limePlaster({ base: 0xddd2c1, dark: 0xcbbca6, seed: 3, strength: 0.7 });
-  plasterTex.repeat.set(0.45, 0.45);
+  const [plasterTex, limeTex, floorTex, gardenTex] = await Promise.all([
+    tex('plaster.jpg', [0.45, 0.45]), tex('limestone.jpg', [0.6, 0.6]), tex('floor_versailles.jpg', [0.5, 0.5], 16), tex('garden.jpg')]);
   MAT.plaster = new THREE.MeshStandardMaterial({ map: plasterTex, roughness: 0.93, color: 0xffffff });
-  const limeTex = limePlaster({ base: 0xdccdb6, dark: 0xbfab8e, seed: 9, strength: 1.25 });
-  limeTex.repeat.set(0.6, 0.6);
   MAT.limestone = new THREE.MeshStandardMaterial({ map: limeTex, roughness: 0.85 });
   MAT.trim = new THREE.MeshStandardMaterial({ color: 0xe6ddcf, roughness: 0.7 });
   MAT.ceiling = new THREE.MeshStandardMaterial({ color: 0xebe4d8, roughness: 0.95 });
-  MAT.floor = new THREE.MeshStandardMaterial({ map: versailles(), roughness: 0.5, color: 0xf2ece4 });
+  MAT.floor = new THREE.MeshStandardMaterial({ map: floorTex, roughness: 0.5, color: 0xf2ece4 });
   const stoneTex = T.limestone({ base: 0xe4dacb, band: 0xd8ccb9 });
   stoneTex.repeat.set(0.5, 0.5);
   MAT.stone = new THREE.MeshStandardMaterial({ map: stoneTex, roughness: 0.55 });
@@ -381,7 +249,7 @@ export async function build(ctx) {
   });
 
   // ---------- exterior: garden backdrop ----------
-  const gMat = new THREE.MeshBasicMaterial({ map: gardenTexture(), toneMapped: false, color: 0xf2f2ec, fog: false });
+  const gMat = new THREE.MeshBasicMaterial({ map: gardenTex, toneMapped: false, color: 0xf2f2ec, fog: false });
   const gBack = mesh(new THREE.PlaneGeometry(34, 12), gMat, { cast: false, receive: false });
   gBack.position.set(7, 4.2, -11); group.add(gBack);
   for (const [sx, ry] of [[-6, Math.PI / 3], [20, -Math.PI / 3]]) {
