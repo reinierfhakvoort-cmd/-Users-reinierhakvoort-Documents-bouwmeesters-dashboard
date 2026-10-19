@@ -6,13 +6,13 @@ import { LM, seProfile, sweep, ellipsePath } from './kit.js';
 
 // Layout (plan, metres). From plan_kdl.png (right end) nudged to the photo framing.
 export const LAYOUT = {
-  rug: { x0: 9.55, x1: 13.05, z0: 0.8, z1: 4.95 },
-  sofa: { cx: 11.15, cz: 2.65, a: 1.5, b: 1.15, th0: Math.PI * 1.06, th1: Math.PI * 1.94 },
-  oval: { x: 10.75, z: 2.9, rot: 0.25 },
-  round: { x: 11.5, z: 3.05 },
-  side: { x: 12.5, z: 3.3 },
-  chairs: [{ x: 10.35, z: 4.2, rot: Math.PI * 0.85 }, { x: 11.95, z: 4.05, rot: -Math.PI * 0.86 }],
-  chairTable: { x: 11.15, z: 4.45 },
+  rug: { x0: 8.95, x1: 12.65, z0: 0.6, z1: 5.0 },
+  sofa: { cx: 10.7, cz: 2.5, a: 1.45, b: 1.3, th0: Math.PI * 1.05, th1: Math.PI * 1.95 },
+  oval: { x: 10.0, z: 3.0, rot: 0.3 },
+  round: { x: 10.75, z: 3.2 },
+  side: { x: 11.55, z: 2.4 },
+  chairs: [{ x: 9.65, z: 4.35, rot: Math.PI - 0.3 }, { x: 10.8, z: 4.3, rot: Math.PI + 0.1 }],
+  chairTable: { x: 10.2, z: 4.65 },
 };
 
 export function buildFurniture(ctx, root) {
@@ -136,7 +136,6 @@ function throwOver(S, t0, t1) {
   // cross-section (r, y): hangs behind the back, over the top, down the inside, over the seat front
   const sec = [[0.5, 0.5], [0.49, 0.7], [0.4, 0.8], [0.25, 0.8], [0.15, 0.68], [0.13, 0.5], [0.05, 0.445], [-0.25, 0.44], [-0.47, 0.42], [-0.53, 0.3], [-0.55, 0.12]];
   const pos = [], uv = [], idx = [];
-  const n = makeN(path.length);
   path.forEach((p, i) => {
     const wob = Math.sin(i * 0.9) * 0.012;
     sec.forEach(([r, y], j) => {
@@ -149,14 +148,12 @@ function throwOver(S, t0, t1) {
   for (let i = 0; i < path.length - 1; i++) for (let j = 0; j < W - 1; j++) {
     const a = i * W + j; idx.push(a, a + W, a + 1, a + 1, a + W, a + W + 1);
   }
-  void n;
   const gg = new THREE.BufferGeometry();
   gg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
   gg.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
   gg.setIndex(idx); gg.computeVertexNormals();
   return mesh(gg, LM.throw);
 }
-const makeN = n => n;
 
 // Lounge chair: dark wood sled frame with sweeping arms, cream boucle seat and back.
 // Local frame: front = +z, width along x, origin at the floor centre.

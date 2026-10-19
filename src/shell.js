@@ -33,7 +33,7 @@ const mixc = (a, b, t) => [mix(a[0], b[0], t), mix(a[1], b[1], t), mix(a[2], b[2
 const clamp01 = v => Math.max(0, Math.min(1, v));
 
 // Warm limestone-like plaster (lime render): cloudy mottling + fine sand grain.
-function limePlaster({ base = 0xdccfbd, dark = 0xc8b8a0, seed = 3, size = 1024, strength = 1 } = {}) {
+function limePlaster({ base = 0xdccfbd, dark = 0xc8b8a0, seed = 3, size = 512, strength = 1 } = {}) {
   const n = makeNoise(seed), B = hex(base), D = hex(dark);
   const c = paint(size, size, (u, v) => {
     const cloud = n.fbm(u * 5, v * 5, 5) * 0.5 + 0.5;
@@ -121,40 +121,45 @@ function versailles({ size = 2048, panel = 1.0, seed = 11 } = {}) {
   return t;
 }
 
-// Soft, misty garden painted on a canvas (seen through the glazing).
+// Soft, misty garden painted on a canvas (seen through the glazing). Each layer is
+// drawn sharp on a small canvas and blurred once when composited (fast).
 function gardenTexture() {
-  const W = 2048, H = 1024, [c, g] = canvas(W, H), r = rng(77);
+  const W = 1024, H = 512, [c, g] = canvas(W, H), r = rng(77);
   const sky = g.createLinearGradient(0, 0, 0, H);
   sky.addColorStop(0, '#eef0ea'); sky.addColorStop(0.55, '#e3e7dc'); sky.addColorStop(1, '#d6dccb');
   g.fillStyle = sky; g.fillRect(0, 0, W, H);
-  const blob = (x, y, rx, ry, col, a) => { g.globalAlpha = a; g.fillStyle = col; g.beginPath(); g.ellipse(x, y, rx, ry, 0, 0, 7); g.fill(); };
-  // far misty tree masses
-  g.filter = 'blur(18px)';
-  for (let i = 0; i < 140; i++) blob(r() * W, H * (0.25 + r() * 0.4), 40 + r() * 120, 40 + r() * 100, ['#b8c2a8', '#a9b597', '#c4cbb5'][i % 3], 0.5);
-  // mid trees
-  g.filter = 'blur(8px)';
-  for (let i = 0; i < 160; i++) blob(r() * W, H * (0.1 + r() * 0.55), 20 + r() * 70, 18 + r() * 55, ['#7f8f64', '#93a176', '#6d7d55', '#a3ae88'][i % 4], 0.55);
-  // trunks and branches (multi-stem trees like the photos)
-  g.filter = 'blur(1.5px)'; g.globalAlpha = 0.75; g.strokeStyle = '#5d5444';
-  const branch = (x, y, ang, len, w, d) => {
-    if (d > 6 || w < 0.6) return;
-    const x2 = x + Math.cos(ang) * len, y2 = y + Math.sin(ang) * len;
-    g.lineWidth = w; g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + (r() - 0.5) * len * 0.3, (y + y2) / 2, x2, y2); g.stroke();
-    const k = 1 + (r() < 0.6 ? 1 : 0);
-    for (let i = 0; i < k; i++) branch(x2, y2, ang + (r() - 0.5) * 0.9, len * (0.7 + r() * 0.2), w * 0.68, d + 1);
+  const layer = (blur, draw) => {
+    const [lc, lg] = canvas(W, H); draw(lg);
+    g.filter = `blur(${blur}px)`; g.drawImage(lc, 0, 0); g.filter = 'none';
   };
-  for (const tx of [380, 900, 1320, 1700]) for (let s = 0; s < 3; s++) branch(tx + (r() - 0.5) * 80, H * 0.86, -Math.PI / 2 + (r() - 0.5) * 0.5, 110 + r() * 60, 6 + r() * 4, 0);
-  // foliage over the branches
-  g.filter = 'blur(5px)';
-  for (let i = 0; i < 260; i++) blob(r() * W, H * (0.05 + r() * 0.45), 8 + r() * 30, 6 + r() * 22, ['#73835a', '#8d9b70', '#5f6f49', '#a2ad86'][i % 4], 0.45);
-  // hedge and lawn
-  g.filter = 'blur(4px)'; g.globalAlpha = 1;
-  g.fillStyle = '#62714a'; g.fillRect(0, H * 0.74, W, H * 0.12);
-  for (let i = 0; i < 300; i++) blob(r() * W, H * (0.74 + r() * 0.04), 10 + r() * 24, 8 + r() * 14, ['#55653f', '#6e7d52', '#7d8b5e'][i % 3], 0.8);
-  const lawn = g.createLinearGradient(0, H * 0.85, 0, H);
-  lawn.addColorStop(0, '#8b9a64'); lawn.addColorStop(1, '#7a8a56');
-  g.fillStyle = lawn; g.fillRect(0, H * 0.85, W, H * 0.15);
-  g.filter = 'none'; g.globalAlpha = 1;
+  const blobs = (lg, n, y0, y1, rx, ry, cols, a) => {
+    for (let i = 0; i < n; i++) {
+      lg.globalAlpha = a; lg.fillStyle = cols[i % cols.length];
+      lg.beginPath(); lg.ellipse(r() * W, H * (y0 + r() * (y1 - y0)), rx[0] + r() * rx[1], ry[0] + r() * ry[1], 0, 0, 7); lg.fill();
+    }
+  };
+  layer(9, lg => blobs(lg, 140, 0.25, 0.65, [20, 60], [20, 50], ['#b8c2a8', '#a9b597', '#c4cbb5'], 0.5));
+  layer(4, lg => blobs(lg, 160, 0.1, 0.65, [10, 35], [9, 28], ['#7f8f64', '#93a176', '#6d7d55', '#a3ae88'], 0.55));
+  layer(0.8, lg => {
+    lg.globalAlpha = 0.75; lg.strokeStyle = '#5d5444';
+    const branch = (x, y, ang, len, w, d) => {
+      if (d > 6 || w < 0.4) return;
+      const x2 = x + Math.cos(ang) * len, y2 = y + Math.sin(ang) * len;
+      lg.lineWidth = w; lg.beginPath(); lg.moveTo(x, y); lg.quadraticCurveTo(x + (r() - 0.5) * len * 0.3, (y + y2) / 2, x2, y2); lg.stroke();
+      const k = 1 + (r() < 0.6 ? 1 : 0);
+      for (let i = 0; i < k; i++) branch(x2, y2, ang + (r() - 0.5) * 0.9, len * (0.7 + r() * 0.2), w * 0.68, d + 1);
+    };
+    for (const tx of [190, 450, 660, 850]) for (let s = 0; s < 3; s++) branch(tx + (r() - 0.5) * 40, H * 0.86, -Math.PI / 2 + (r() - 0.5) * 0.5, 55 + r() * 30, 3 + r() * 2, 0);
+  });
+  layer(2.5, lg => blobs(lg, 260, 0.05, 0.5, [4, 15], [3, 11], ['#73835a', '#8d9b70', '#5f6f49', '#a2ad86'], 0.45));
+  layer(2, lg => {
+    lg.fillStyle = '#62714a'; lg.fillRect(0, H * 0.74, W, H * 0.12);
+    blobs(lg, 300, 0.74, 0.78, [5, 12], [4, 7], ['#55653f', '#6e7d52', '#7d8b5e'], 0.8);
+    lg.globalAlpha = 1;
+    const lawn = lg.createLinearGradient(0, H * 0.85, 0, H);
+    lawn.addColorStop(0, '#8b9a64'); lawn.addColorStop(1, '#7a8a56');
+    lg.fillStyle = lawn; lg.fillRect(0, H * 0.85, W, H * 0.15);
+  });
   return toTexture(c, { repeat: [1, 1] });
 }
 

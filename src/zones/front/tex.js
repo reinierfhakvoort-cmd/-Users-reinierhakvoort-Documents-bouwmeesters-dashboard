@@ -28,7 +28,7 @@ function mottle(g, size, seed, amp = 0.05) {
   const n = makeNoise(seed);
   const img = g.getImageData(0, 0, size, size);
   for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
-    const k = 1 + n.fbm(x / size * 7, y / size * 7, 4) * amp * 2 + n.noise(x / size * 90, y / size * 90) * amp * 0.4;
+    const k = 1 + n.fbm(x / size * 7, y / size * 7, 3) * amp * 2 + n.noise(x / size * 90, y / size * 90) * amp * 0.4;
     const i = (y * size + x) * 4;
     img.data[i] *= k; img.data[i + 1] *= k; img.data[i + 2] *= k;
   }
@@ -95,7 +95,7 @@ export function tiles({ base = 0x6a6660, tile = 0.6, cover = 1.2, size = 1024, s
 }
 
 // Wide pale-oak boards (library). One tile = 2.4 m.
-export function boards({ size = 2048, seed = 17, light = 0xd6bc97, dark = 0xbb9a72 } = {}) {
+export function boards({ size = 1024, seed = 17, light = 0xd6bc97, dark = 0xbb9a72 } = {}) {
   return cached('boards' + seed, () => {
     const [c, g] = canvas(size);
     const r = rng(seed), n = makeNoise(seed);

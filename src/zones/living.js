@@ -6,6 +6,7 @@ import { mesh, lathe, moulding, panelFrame, rbox } from '../lib/build.js';
 import * as T from '../lib/textures.js';
 import { LM, initMaterials, nicheGlow, flameTexture } from './living/kit.js';
 import { buildFurniture } from './living/furniture.js';
+import { MAT } from '../shell.js';
 
 const FACE = 13.75;          // room-side face of the fireplace-wall lining (shell wall is at x = 14)
 const H = KDL.height;
@@ -180,6 +181,11 @@ function oakNiche(ctx, root) {
   root.add(w);
   const u0 = 2.2, u1 = 3.8, D = 0.42, oak = LM.oak;
   const iu0 = u0 + 0.09, iu1 = u1 - 0.09, iy0 = 0.95, iy1 = 2.72, back = 0.06;
+  // plaster piers either side so the oak unit reads as recessed into a thick wall
+  const pl = MAT.plaster ?? LM.paint;
+  lbox(w, u0 - 0.28, 0, 0, u0, H, D, pl);
+  lbox(w, u1, 0, 0, u1 + 0.25, H, D, pl);
+  lbox(w, u0, TOP, 0, u1, H, D, pl);
   lbox(w, u0, 0, 0, iu0, TOP, D, oak);                 // side stiles
   lbox(w, iu1, 0, 0, u1, TOP, D, oak);
   lbox(w, iu0, iy1, 0, iu1, TOP, D, oak);              // header
@@ -209,5 +215,5 @@ function oakNiche(ctx, root) {
   const cup = lathe([[0, 0], [0.045, 0], [0.047, 0.11], [0.04, 0.11], [0.038, 0.01], [0, 0.01]], LM.ceramicW, 32);
   cup.position.set(iu1 - 0.3, iy0, 0.2); w.add(cup);
   const bk = books([0.22], LM.book2); bk.position.set(iu1 - 0.55, iy0, 0.22); w.add(bk);
-  ctx.addColliderBox(KDL.x1 - u1, KDL.z1 - D, KDL.x1 - u0, KDL.z1);
+  ctx.addColliderBox(KDL.x1 - u1 - 0.25, KDL.z1 - D, KDL.x1 - u0 + 0.28, KDL.z1);
 }
