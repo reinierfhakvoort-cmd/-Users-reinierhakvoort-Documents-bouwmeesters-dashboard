@@ -135,9 +135,10 @@ def trees(dd):
 layer(1.5, trees)
 layer(10, lambda dd: blobs(dd, 320, 0.03, 0.5, (8, 30), (6, 22), [hx('#73835a'), hx('#8d9b70'), hx('#5f6f49'), hx('#a2ad86')], 0.45))
 def hedge(dd):
-    dd.rectangle([0, H * 0.74, W, H * 0.86], fill=hx('#62714a') + (255,))
-    blobs(dd, 400, 0.735, 0.78, (10, 24), (8, 14), [hx('#55653f'), hx('#6e7d52'), hx('#7d8b5e')], 0.9)
-    dd.rectangle([0, H * 0.86, W, H], fill=hx('#87965f') + (255,))
+    dd.rectangle([0, H * 0.8, W, H * 0.9], fill=hx('#6c7b52') + (255,))
+    blobs(dd, 400, 0.795, 0.83, (10, 24), (8, 14), [hx('#55653f'), hx('#6e7d52'), hx('#7d8b5e')], 0.9)
+    dd.rectangle([0, H * 0.9, W, H], fill=hx('#93a26a') + (255,))
 layer(3, hedge)
+layer(40, lambda dd: dd.rectangle([0, 0, W, H * 0.8], fill=(236, 238, 230, 70)))
 img.save(os.path.join(OUT, 'garden.jpg'), quality=88)
 print('ok')

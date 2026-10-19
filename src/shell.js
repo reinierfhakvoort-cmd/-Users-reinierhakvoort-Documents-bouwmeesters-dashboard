@@ -46,7 +46,7 @@ export async function build(ctx) {
   MAT.limestone = new THREE.MeshStandardMaterial({ map: limeTex, roughness: 0.85 });
   MAT.trim = new THREE.MeshStandardMaterial({ color: 0xe6ddcf, roughness: 0.7 });
   MAT.ceiling = new THREE.MeshStandardMaterial({ color: 0xebe4d8, roughness: 0.95 });
-  MAT.floor = new THREE.MeshStandardMaterial({ map: floorTex, roughness: 0.5, color: 0xe2d4c4 });
+  MAT.floor = new THREE.MeshStandardMaterial({ map: floorTex, roughness: 0.5, color: 0xf3e9de });
   const stoneTex = T.limestone({ base: 0xe4dacb, band: 0xd8ccb9 });
   stoneTex.repeat.set(0.5, 0.5);
   MAT.stone = new THREE.MeshStandardMaterial({ map: stoneTex, roughness: 0.55 });
@@ -234,7 +234,7 @@ export async function build(ctx) {
     }
     g.position.set(sx, 1.75, z0);
     group.add(g);
-    const l = new THREE.PointLight(0xffc690, 0.9, 3.0, 2);
+    const l = new THREE.PointLight(0xffc690, 0.35, 2.5, 2);
     l.position.set(sx, 1.75, z0 + 0.22);
     group.add(l); sconceLights.push(l);
   }
@@ -258,19 +258,17 @@ export async function build(ctx) {
   });
 
   // ---------- exterior: garden backdrop ----------
-  const gMat = new THREE.MeshBasicMaterial({ map: gardenTex, toneMapped: false, color: 0xf2f2ec, fog: false });
+  const gMat = new THREE.MeshBasicMaterial({ map: gardenTex, toneMapped: false, color: 0xffffff, fog: false });
   const gBack = mesh(new THREE.PlaneGeometry(34, 12), gMat, { cast: false, receive: false });
   gBack.position.set(7, 4.2, -11); group.add(gBack);
   for (const [sx, ry] of [[-6, Math.PI / 3], [20, -Math.PI / 3]]) {
     const s = mesh(new THREE.PlaneGeometry(20, 12), gMat, { cast: false, receive: false });
     s.position.set(sx, 4.2, -5); s.rotation.y = ry; group.add(s);
   }
-  const lawnMat = new THREE.MeshStandardMaterial({ color: 0x8e9a6c, roughness: 1 });
+  const lawnMat = new THREE.MeshBasicMaterial({ color: 0xa3ad84 });
   group.add(boxMinMax(-8, -0.06, -14, 22, -0.05, z0 - wall, lawnMat, { cast: false }));
   // terrace stone right outside
   group.add(boxMinMax(-2, -0.05, -3.2, 16, -0.02, z0 - wall, new THREE.MeshStandardMaterial({ color: 0xcfc6b6, roughness: 0.8 }), { cast: false }));
-  // low clipped hedge
-  group.add(boxMinMax(-6, 0, -6.5, 20, 1.1, -5.6, new THREE.MeshStandardMaterial({ color: 0x5c6b45, roughness: 1 })));
 
   // ---------- light ----------
   // Overcast daylight from the garden (north): a soft sky light through every
@@ -282,7 +280,7 @@ export async function build(ctx) {
   scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
   scene.environmentIntensity = 0.22;
   scene.background = new THREE.Color(0xdfe4d8);
-  group.add(new THREE.HemisphereLight(0xefe9de, 0x9a8162, 0.4));
+  group.add(new THREE.HemisphereLight(0xf3ede2, 0xa58b6a, 0.85));
 
   const skyCol = 0xf1f1ec;
   const addWindowLight = (cx, cy, cz, w, h, intensity, face = 'n') => {
@@ -300,7 +298,7 @@ export async function build(ctx) {
   addWindowLight(bi.x1 + 0.02, (gl0 + gl1) / 2, (bz + z0) / 2, bay.depth - 0.4, gl1 - gl0, 3, 'e');
 
   const sun = new THREE.DirectionalLight(0xfff0dc, 0.75);
-  sun.position.set(2.5, 7.5, -9); sun.target.position.set(7.5, 0, 2.5);
+  sun.position.set(10, 10, -8); sun.target.position.set(6.5, 0, 3);
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
   Object.assign(sun.shadow.camera, { left: -11, right: 11, top: 9, bottom: -9, near: 1, far: 40 });
