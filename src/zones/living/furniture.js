@@ -6,13 +6,13 @@ import { LM, seProfile, sweep, ellipsePath } from './kit.js';
 
 // Layout (plan, metres). From plan_kdl.png (right end) nudged to the photo framing.
 export const LAYOUT = {
-  rug: { x0: 8.95, x1: 12.65, z0: 0.6, z1: 5.0 },
-  sofa: { cx: 10.7, cz: 2.5, a: 1.45, b: 1.3, th0: Math.PI * 1.05, th1: Math.PI * 1.95 },
-  oval: { x: 10.0, z: 3.0, rot: 0.3 },
-  round: { x: 10.75, z: 3.2 },
-  side: { x: 11.55, z: 2.4 },
-  chairs: [{ x: 9.65, z: 4.35, rot: Math.PI - 0.3 }, { x: 10.8, z: 4.3, rot: Math.PI + 0.1 }],
-  chairTable: { x: 10.2, z: 4.65 },
+  rug: { x0: 9.0, x1: 12.7, z0: 0.75, z1: 5.05 },
+  sofa: { cx: 10.55, cz: 2.3, a: 0.85, b: 0.75, th0: Math.PI * 0.9, th1: Math.PI * 1.85 },
+  oval: { x: 10.2, z: 3.0, rot: 0.3 },
+  round: { x: 10.85, z: 3.3 },
+  side: { x: 11.42, z: 2.6 },
+  chairs: [{ x: 9.45, z: 4.4, rot: Math.PI - 0.3 }, { x: 10.6, z: 4.3, rot: Math.PI + 0.1 }],
+  chairTable: { x: 10.0, z: 4.7 },
 };
 
 export function buildFurniture(ctx, root) {
@@ -28,23 +28,23 @@ export function buildFurniture(ctx, root) {
   const S = LAYOUT.sofa;
   const path = ellipsePath(S.cx, S.cz, S.a, S.b, S.th0, S.th1, 90);
   // +r = outward (north, the back). Back at r 0.18..0.48, seat r -0.48..0.2
-  const back = mesh(sweep(seProfile(0.31, 0.39, 0.17, 0.39, 3.2), path, { cap: 0.32, ySquash: 0.15 }), LM.boucle);
-  const seat = mesh(sweep(seProfile(-0.12, 0.215, 0.37, 0.215, 3.6), path, { cap: 0.42, ySquash: 0.1 }), LM.boucle);
+  const back = mesh(sweep(seProfile(0.30, 0.41, 0.19, 0.41, 2.6), path, { cap: 0.3, ySquash: 0.28, uvScale: 1 }), LM.boucle);
+  const seat = mesh(sweep(seProfile(-0.13, 0.22, 0.36, 0.22, 3.0), path, { cap: 0.38, ySquash: 0.12 }), LM.boucle);
   back.material = LM.boucle; g.add(back, seat);
   // cushions leaning on the back (west / middle part)
-  for (const [t, rot] of [[0.30, 0.0], [0.45, 0.05]]) {
+  for (const [t, rot] of [[0.33, 0.0], [0.5, 0.06]]) {
     const th = S.th0 + (S.th1 - S.th0) * t;
     const px = S.cx + S.a * Math.cos(th), pz = S.cz + S.b * Math.sin(th);
     let nx = Math.cos(th) / S.a, nz = Math.sin(th) / S.b; const l = Math.hypot(nx, nz); nx /= l; nz /= l;
-    const c = rbox(0.5, 0.46, 0.17, 0.07, LM.cushion, 4);
-    c.position.set(px + nx * 0.05, 0.64, pz + nz * 0.05);
+    const c = rbox(0.46, 0.42, 0.16, 0.08, LM.cushion, 4);
+    c.position.set(px + nx * 0.02, 0.63, pz + nz * 0.02);
     c.rotation.y = Math.atan2(nx, nz);
     c.rotateX(-0.2 + rot);
     c.scale.set(1, 1, 0.9);
     g.add(c);
   }
   // draped throw over the east part of the back
-  g.add(throwOver(S, 0.76, 0.9));
+  g.add(throwOver(S, 0.7, 0.88));
 
   // ---------- coffee tables ----------
   const O = LAYOUT.oval;
@@ -70,14 +70,14 @@ export function buildFurniture(ctx, root) {
   // ---------- side table at the sofa's east end (tray top, books, bowl) ----------
   const Sd = LAYOUT.side;
   const side = new THREE.Group();
-  const stop = extrudePlan(superellipse(0.4, 0.3, 2.2), 0.035, LM.walnut, { bevel: 0.006 }); stop.position.y = 0.48; side.add(stop);
-  const rim = mesh(new THREE.TorusGeometry(1, 0.012, 6, 64), LM.walnut);
-  rim.rotation.x = Math.PI / 2; rim.scale.set(0.39, 0.29, 1); rim.position.y = 0.53; side.add(rim);
-  side.add(fluted(0.13, 0.48, LM.walnutDark));
-  const sb1 = rbox(0.28, 0.035, 0.2, 0.004, LM.book1); sb1.position.set(0.04, 0.535, -0.02); side.add(sb1);
-  const sb2 = rbox(0.24, 0.03, 0.18, 0.004, LM.book2); sb2.position.set(0.04, 0.567, -0.02); sb2.rotation.y = 0.15; side.add(sb2);
+  const stop = mesh(new THREE.CylinderGeometry(0.29, 0.29, 0.03, 64), LM.walnut); stop.position.y = 0.465; side.add(stop);
+  const rim = mesh(new THREE.TorusGeometry(0.28, 0.014, 8, 64), LM.walnut);
+  rim.rotation.x = Math.PI / 2; rim.scale.set(1, 1, 1.8); rim.position.y = 0.49; side.add(rim);
+  side.add(fluted(0.11, 0.45, LM.walnutDark));
+  const sb1 = rbox(0.28, 0.035, 0.2, 0.004, LM.book1); sb1.position.set(0.03, 0.5, -0.02); side.add(sb1);
+  const sb2 = rbox(0.24, 0.03, 0.18, 0.004, LM.book2); sb2.position.set(0.03, 0.532, -0.02); sb2.rotation.y = 0.15; side.add(sb2);
   const bowl = lathe([[0.0, 0], [0.05, 0], [0.09, 0.02], [0.11, 0.05], [0.1, 0.055], [0.08, 0.025], [0, 0.02]], LM.ceramicD, 40);
-  bowl.position.set(0.02, 0.582, -0.02); side.add(bowl);
+  bowl.position.set(0.02, 0.547, -0.02); side.add(bowl);
   side.position.set(Sd.x, 0, Sd.z); side.rotation.y = 0.5; g.add(side);
 
   // ---------- lounge chairs ----------
@@ -134,7 +134,7 @@ function throwOver(S, t0, t1) {
   const th0 = S.th0 + (S.th1 - S.th0) * t0, th1 = S.th0 + (S.th1 - S.th0) * t1;
   const path = ellipsePath(S.cx, S.cz, S.a, S.b, th0, th1, 24);
   // cross-section (r, y): hangs behind the back, over the top, down the inside, over the seat front
-  const sec = [[0.5, 0.5], [0.49, 0.7], [0.4, 0.8], [0.25, 0.8], [0.15, 0.68], [0.13, 0.5], [0.05, 0.445], [-0.25, 0.44], [-0.47, 0.42], [-0.53, 0.3], [-0.55, 0.12]];
+  const sec = [[0.52, 0.42], [0.515, 0.68], [0.44, 0.835], [0.28, 0.855], [0.15, 0.75], [0.115, 0.52], [0.04, 0.455], [-0.25, 0.45], [-0.49, 0.435], [-0.54, 0.3], [-0.56, 0.08]];
   const pos = [], uv = [], idx = [];
   path.forEach((p, i) => {
     const wob = Math.sin(i * 0.9) * 0.012;
@@ -178,7 +178,7 @@ function sidePlank(t = 0.05, thick = 0.035) {
 
 function loungeChair() {
   const c = new THREE.Group();
-  const W = 0.5;
+  const W = 0.42;
   const frame = LM.walnutDark;
   const sq = (x0, y0, z0, x1, y1, z1) => { const m = mesh(new THREE.BoxGeometry(x1 - x0, y1 - y0, z1 - z0), frame); m.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2); c.add(m); };
   const pg = sidePlank();
@@ -191,7 +191,7 @@ function loungeChair() {
   sq(-W, 0.27, 0.3, W, 0.31, 0.34);
   sq(-W, 0.27, -0.24, W, 0.31, -0.2);
   sq(-0.02, 0.17, -0.24, 0.02, 0.21, 0.34);
-  const seat = rbox(0.94, 0.15, 0.62, 0.07, LM.boucle, 4); seat.position.set(0, 0.44, 0.06); seat.rotation.x = -0.07; c.add(seat);
-  const back = rbox(0.94, 0.6, 0.15, 0.07, LM.boucle, 4); back.position.set(0, 0.7, -0.26); back.rotation.x = -0.38; c.add(back);
+  const seat = rbox(0.8, 0.15, 0.62, 0.07, LM.boucle, 4); seat.position.set(0, 0.44, 0.06); seat.rotation.x = -0.07; c.add(seat);
+  const back = rbox(0.8, 0.6, 0.15, 0.07, LM.boucle, 4); back.position.set(0, 0.7, -0.26); back.rotation.x = -0.38; c.add(back);
   return c;
 }

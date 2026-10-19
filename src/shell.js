@@ -42,7 +42,7 @@ export async function build(ctx) {
   // ---------- materials ----------
   const [plasterTex, limeTex, floorTex, gardenTex] = await Promise.all([
     tex('plaster.jpg', [0.45, 0.45]), tex('limestone.jpg', [0.6, 0.6]), tex('floor_versailles.jpg', [0.5, 0.5], 16), tex('garden.jpg')]);
-  MAT.plaster = new THREE.MeshStandardMaterial({ map: plasterTex, roughness: 0.93, color: 0xffffff });
+  MAT.plaster = new THREE.MeshStandardMaterial({ map: plasterTex, roughness: 0.93, color: 0xf2e8da });
   MAT.limestone = new THREE.MeshStandardMaterial({ map: limeTex, roughness: 0.85 });
   MAT.trim = new THREE.MeshStandardMaterial({ color: 0xe6ddcf, roughness: 0.7 });
   MAT.ceiling = new THREE.MeshStandardMaterial({ color: 0xebe4d8, roughness: 0.95 });
@@ -280,7 +280,7 @@ export async function build(ctx) {
   scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
   scene.environmentIntensity = 0.22;
   scene.background = new THREE.Color(0xdfe4d8);
-  group.add(new THREE.HemisphereLight(0xf3ede2, 0xa58b6a, 0.85));
+  group.add(new THREE.HemisphereLight(0xf3e8d6, 0xa58b6a, 0.8));
 
   const skyCol = 0xf1f1ec;
   const addWindowLight = (cx, cy, cz, w, h, intensity, face = 'n') => {

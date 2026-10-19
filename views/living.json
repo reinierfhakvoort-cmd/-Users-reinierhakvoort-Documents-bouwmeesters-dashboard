@@ -1,4 +1,4 @@
 {
-  "living_02": { "label": "Living → kitchen (photo t02)", "ref": "reference/frames/t02.jpg", "pos": [13.5, 1.4, 3.0], "target": [0, 0.79, 3.0], "fov": 52 },
-  "living_29": { "label": "Fireplace end (photo t29)", "ref": "reference/frames/t29.jpg", "pos": [4.36, 1.46, 1.86], "target": [14, 1.46, 1.86], "fov": 56 }
+  "living_02": { "label": "Living → kitchen (photo t02)", "ref": "reference/frames/t02.jpg", "pos": [13.5, 1.6, 2.85], "target": [0, 0.95, 3.15], "fov": 55 },
+  "living_29": { "label": "Fireplace end (photo t29)", "ref": "reference/frames/t29.jpg", "pos": [4.25, 1.47, 2.4], "target": [14, 1.47, 1.815], "fov": 55.8 }
 }

@@ -6,12 +6,13 @@ export const LM = {}; // living materials, filled by initMaterials()
 
 export function initMaterials() {
   if (LM.ready) return LM;
-  const b = T.boucle({ base: 0xebe3d6, seed: 33 });
-  b.map.repeat.set(2.2, 2.2); b.bump.repeat.set(2.2, 2.2);
-  LM.boucle = new THREE.MeshStandardMaterial({ map: b.map, bumpMap: b.bump, bumpScale: 1.2, roughness: 0.97, color: 0xfffbf4 });
-  const b2 = T.boucle({ base: 0xd8c8b2, seed: 35 });
-  LM.cushion = new THREE.MeshStandardMaterial({ map: b2.map, bumpMap: b2.bump, bumpScale: 0.8, roughness: 0.97 });
-  const lin = T.linen({ base: 0xa39484, seed: 57 });
+  const b = T.boucle({ base: 0xdcd2c2, seed: 33 });
+  b.map.repeat.set(3, 3); b.bump.repeat.set(3, 3);
+  LM.boucle = new THREE.MeshPhysicalMaterial({ map: b.map, bumpMap: b.bump, bumpScale: 3, roughness: 1, color: 0xe4dacb, sheen: 1, sheenRoughness: 0.6, sheenColor: new THREE.Color(0xb8aa98) });
+  const b2 = T.boucle({ base: 0xcab9a2, seed: 35 });
+  b2.map.repeat.set(2, 2); b2.bump.repeat.set(2, 2);
+  LM.cushion = new THREE.MeshPhysicalMaterial({ map: b2.map, bumpMap: b2.bump, bumpScale: 2, roughness: 1, sheen: 1, sheenRoughness: 0.6, sheenColor: new THREE.Color(0xa09080) });
+  const lin = T.linen({ base: 0x978776, seed: 57 });
   LM.throw = new THREE.MeshStandardMaterial({ map: lin, roughness: 0.95, side: THREE.DoubleSide });
   const wal = T.woodGrain({ light: 0x5e4433, dark: 0x3a291e, seed: 71, rings: 22 });
   LM.walnut = new THREE.MeshStandardMaterial({ map: wal, roughness: 0.42, color: 0xe8ddd5 });
@@ -19,7 +20,7 @@ export function initMaterials() {
   const oak = T.woodGrain({ light: 0xdcc3a2, dark: 0xc4a682, seed: 73, rings: 26 });
   oak.repeat.set(1, 1);
   LM.oak = new THREE.MeshStandardMaterial({ map: oak, roughness: 0.62 });
-  const rugT = T.rug({ base: 0xe2d8c8, seed: 43 });
+  const rugT = T.rug({ base: 0xc9b9a0, seed: 43 });
   rugT.repeat.set(3, 3);
   LM.rug = new THREE.MeshStandardMaterial({ map: rugT, roughness: 1 });
   LM.trav = new THREE.MeshStandardMaterial({ map: travertine(), roughness: 0.55 });
