@@ -33,7 +33,7 @@ export function makeMaterials() {
   const rn = T.makeNoise(77);
   const rugC = T.paint(1024, 1024, (u, v) => {
     const k = rn.noise(u * 380, v * 380) * 0.07 + rn.noise(u * 90, v * 90) * 0.03 + rn.fbm(u * 6, v * 6, 3) * 0.04;
-    return [196 * (1 + k), 180 * (1 + k), 152 * (1 + k)];
+    return [186 * (1 + k), 170 * (1 + k), 143 * (1 + k)];
   });
   const rugTex = T.toTexture(rugC); rugTex.repeat.set(0.45, 0.45);
   M.rug = new THREE.MeshStandardMaterial({ map: rugTex, roughness: 1 });
@@ -78,9 +78,9 @@ export function makeChair(M) {
   g.add(frame);
 
   // Horseshoe bolster: torus arc, elliptical tube (taller than deep).
-  const BR = 0.25, tube = 0.058, arc = Math.PI * 1.42;
+  const BR = 0.255, tube = 0.05, arc = Math.PI * 1.22, TY = 1.45;
   const tor = new THREE.TorusGeometry(BR, tube, 14, 44, arc);
-  tor.scale(1, 1, 1.15);                  // tube height (torus local z -> world y after rotation)
+  tor.scale(1, 1, TY);                  // tube height (torus local z -> world y after rotation)
   tor.rotateZ(-Math.PI / 2 - arc / 2);    // centre the arc on local -y (world -z, the back)
   tor.rotateX(Math.PI / 2);               // lay it flat: local y -> world -z
   const back = mesh(tor, M.boucleTube);
@@ -91,7 +91,7 @@ export function makeChair(M) {
   for (const s of [-1, 1]) {
     const ang = -Math.PI / 2 + s * (arc / 2);       // plan angle (x = cos, z = sin)
     const cap = mesh(new THREE.SphereGeometry(tube, 14, 10), M.boucleTube);
-    cap.scale.set(1, 1.15, 1);
+    cap.scale.set(1, TY, 1);
     cap.position.set(Math.cos(ang) * BR, backY, Math.sin(ang) * BR - 0.02);
     g.add(cap);
   }

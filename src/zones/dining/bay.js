@@ -18,8 +18,8 @@ export function buildBay(ctx, M, { x0 = 5.6, x1 = 8.4, zBack = -1.3 } = {}) {
   seat.position.set(scx, 0.13 + 0.1, sz + 0.01); g.add(seat);
   const nBack = 3, bw = (sw - 0.06) / nBack;
   for (let i = 0; i < nBack; i++) {
-    const b = rb(bw - 0.02, 0.44, 0.2, 0.08, M.sofa);
-    b.position.set(sx0 + 0.03 + bw * (i + 0.5), 0.33 + 0.22, zBack + 0.15);
+    const b = rb(bw - 0.02, 0.36, 0.2, 0.08, M.sofa);
+    b.position.set(sx0 + 0.03 + bw * (i + 0.5), 0.33 + 0.18, zBack + 0.15);
     b.rotation.x = -0.12; g.add(b);
   }
   // scatter cushions
