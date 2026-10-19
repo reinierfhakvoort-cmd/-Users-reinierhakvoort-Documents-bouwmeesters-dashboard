@@ -4,7 +4,7 @@ import { createRequire } from 'node:module';
 import { execSync } from 'node:child_process';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, rmSync, readFileSync, writeFileSync } from 'node:fs';
 import { extname, join, resolve } from 'node:path';
 
 // Use a local playwright if installed, otherwise the global one.
@@ -29,6 +29,26 @@ const server = createServer(async (req, res) => {
   } catch { res.writeHead(404); res.end(); }
 }).listen(0);
 const port = server.address().port;
+
+// Headless WebGL is CPU-bound: allow at most two renders at once across all builders.
+const SLOTS = 2, lockDir = '/tmp/house-render-locks';
+mkdirSync(lockDir, { recursive: true });
+const alive = pid => { try { process.kill(pid, 0); return true; } catch { return false; } };
+let slot = null;
+for (let waited = 0; slot === null; waited++) {
+  for (let i = 0; i < SLOTS && slot === null; i++) {
+    const d = `${lockDir}/slot${i}`;
+    try { mkdirSync(d); writeFileSync(`${d}/pid`, String(process.pid)); slot = d; }
+    catch {
+      let pid = 0; try { pid = Number(readFileSync(`${d}/pid`, 'utf8')); } catch {}
+      if (pid && !alive(pid)) rmSync(d, { recursive: true, force: true });
+    }
+  }
+  if (slot === null) { if (waited === 0) console.log('waiting for a render slot...'); await new Promise(r => setTimeout(r, 1000)); }
+}
+const release = () => { try { rmSync(slot, { recursive: true, force: true }); } catch {} };
+process.on('exit', release);
+for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => process.exit(1));
 
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
