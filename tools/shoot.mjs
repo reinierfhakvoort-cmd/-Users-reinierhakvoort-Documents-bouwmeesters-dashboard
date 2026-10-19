@@ -40,8 +40,8 @@ for (const v of views) {
   if (v.startsWith('cam=')) q.set('cam', v.slice(4)); else q.set('view', v);
   for (const f of flags) { const [k, val] = f.split('='); q.set(k, val ?? '1'); }
   const t0 = Date.now();
-  await page.goto(`http://localhost:${port}/index.html?${q}`);
-  await page.waitForFunction('window.__ready === true', null, { timeout: 240000 });
+  await page.goto(`http://localhost:${port}/index.html?${q}`, { timeout: 300000 });
+  await page.waitForFunction('window.__ready === true', null, { timeout: 900000 });
   const name = v.startsWith('cam=') ? 'cam' : v;
   const file = join(out, `${name}.png`);
   await page.screenshot({ path: file });

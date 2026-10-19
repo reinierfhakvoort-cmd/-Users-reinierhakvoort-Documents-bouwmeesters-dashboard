@@ -18,8 +18,8 @@ renderer.setSize(W, H);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.0;
+renderer.toneMapping = THREE.NeutralToneMapping;
+renderer.toneMappingExposure = 0.78;
 document.body.appendChild(renderer.domElement);
 // ?cut=2.2 slices the house horizontally (for plan checks from above).
 if (params.get('cut')) renderer.clippingPlanes = [new THREE.Plane(new THREE.Vector3(0, -1, 0), Number(params.get('cut')))];

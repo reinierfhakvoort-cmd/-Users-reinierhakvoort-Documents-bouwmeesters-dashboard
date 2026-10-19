@@ -30,54 +30,21 @@ const K = {
 };
 
 // ---------- materials ----------
-function calacatta(seed = 9, size = 1024) {
-  const n = T.makeNoise(seed), n2 = T.makeNoise(seed + 7);
-  const B = [244, 240, 235];
-  const V = [96, 84, 76], G = [170, 150, 128];
-  return T.paint(size, size, (u, v) => {
-    const w1 = n.fbm(u * 1.6, v * 1.6, 6) * 1.6;
-    const w2 = n2.fbm(u * 3 + 4, v * 3, 5) * 0.9;
-    // main veins: diagonal, branching
-    const a = (u * 1.1 - v * 0.8 + w1) * 2.2;
-    const d1 = Math.abs(a - Math.round(a));
-    const main = Math.exp(-(d1 * d1) / 0.0009) * (0.55 + 0.45 * (n.noise(u * 5, v * 5) * 0.5 + 0.5));
-    const halo = Math.exp(-(d1 * d1) / 0.012) * 0.35;
-    // secondary thin veins
-    const b = (u * 0.5 + v * 1.3 + w2 + w1 * 0.4) * 4;
-    const d2 = Math.abs(b - Math.round(b));
-    const thin = Math.exp(-(d2 * d2) / 0.0005) * Math.max(0, n2.noise(u * 3, v * 3) + 0.2);
-    const cloud = n.fbm(u * 6 + 9, v * 6, 4) * 0.035;
-    let c = B.map(ch => ch * (1 + cloud));
-    const mixc = (c, t, k) => c.map((ch, i) => ch + (t[i] - ch) * Math.min(1, k));
-    c = mixc(c, G, halo);
-    c = mixc(c, V, thin * 0.6);
-    c = mixc(c, V, main);
-    return c;
-  });
-}
-
-// Book-matched pair: slab and its mirror image side by side.
-function bookMatch(slab) {
-  const [c, g] = T.canvas(slab.width * 2, slab.height);
-  g.drawImage(slab, 0, 0);
-  g.save(); g.translate(slab.width * 2, 0); g.scale(-1, 1); g.drawImage(slab, 0, 0); g.restore();
-  return c;
-}
-
-function makeMaterials() {
-  const slab = calacatta(9);
-  const marbleTex = T.toTexture(slab, { repeat: [0.42, 0.42] });
+async function makeMaterials() {
+  // Calacatta slabs are pre-rendered (tools: numpy) into assets/kitchen/ to keep load fast.
+  const load = async (f, rep, clamp) => {
+    const t = await T.imageAsync(`./assets/kitchen/${f}`);
+    if (clamp) t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping;
+    else { t.wrapS = t.wrapT = THREE.MirroredRepeatWrapping; t.repeat.set(rep, rep); }
+    t.anisotropy = 8; t.needsUpdate = true;
+    return t;
+  };
+  const [m0, m2, b0, b1] = await Promise.all([load('marble0.jpg', 0.42), load('marble2.jpg', 0.5), load('marble0_book.jpg', 0, true), load('marble1_book.jpg', 0, true)]);
   const M = {};
-  M.marble = new THREE.MeshStandardMaterial({ map: marbleTex, roughness: 0.22 });
-  const bm = T.toTexture(bookMatch(slab));
-  bm.wrapS = bm.wrapT = THREE.ClampToEdgeWrapping;
-  M.marbleBook = new THREE.MeshStandardMaterial({ map: bm, roughness: 0.2 });
-  const slab2 = calacatta(23);
-  const bm2 = T.toTexture(bookMatch(slab2));
-  bm2.wrapS = bm2.wrapT = THREE.ClampToEdgeWrapping;
-  M.marbleBook2 = new THREE.MeshStandardMaterial({ map: bm2, roughness: 0.2 });
-  const islandTex = T.toTexture(calacatta(41), { repeat: [0.5, 0.5] });
-  M.marbleIsland = new THREE.MeshStandardMaterial({ map: islandTex, roughness: 0.25 });
+  M.marble = new THREE.MeshStandardMaterial({ map: m0, roughness: 0.22 });
+  M.marbleBook = new THREE.MeshStandardMaterial({ map: b0, roughness: 0.2 });
+  M.marbleBook2 = new THREE.MeshStandardMaterial({ map: b1, roughness: 0.2 });
+  M.marbleIsland = new THREE.MeshStandardMaterial({ map: m2, roughness: 0.25 });
   const oakTex = T.woodGrain({ light: 0xdcc3a5, dark: 0xc6a685, seed: 17, rings: 14 });
   oakTex.repeat.set(0.9, 0.5);
   M.oak = new THREE.MeshStandardMaterial({ map: oakTex, roughness: 0.62 });
@@ -171,7 +138,7 @@ function archRect(u0, u1, v0, v1, r) {
 
 export async function build(ctx) {
   const { group } = ctx;
-  const M = makeMaterials();
+  const M = await makeMaterials();
   const g = new THREE.Group(); g.name = 'kitchen';
   group.add(g);
 

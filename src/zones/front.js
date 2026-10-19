@@ -42,22 +42,28 @@ export async function build(ctx) {
     floors.add(mesh(geo, mat, { cast: false }));
   };
   // base stone under everything (shows in thresholds)
-  floor(-0.35, 6.0, 14.35, FAC + FT_, M.limestoneFloor, -0.001);
+  floor(-0.35, 6.0, 14.35, FAC + FT_, M.limestoneFloor, -0.015);
   // thresholds in the KDL arches
   floor(3.95, 6.0, 5.15, 6.3, M.borderStone, 0.002);
   floor(8.6, 6.0, 9.8, 6.3, M.borderStone, 0.002);
   const bordered = (r, band = 0.22) => {
-    floor(r.x0, r.z0, r.x1, r.z1, M.borderStone, 0.001);
-    floor(r.x0 + band, r.z0 + band, r.x1 - band, r.z1 - band, M.weave, 0.002);
+    floor(r.x0, r.z0, r.x1, r.z0 + band, M.borderStone);
+    floor(r.x0, r.z1 - band, r.x1, r.z1, M.borderStone);
+    floor(r.x0, r.z0 + band, r.x0 + band, r.z1 - band, M.borderStone);
+    floor(r.x1 - band, r.z0 + band, r.x1, r.z1 - band, M.borderStone);
+    floor(r.x0 + band, r.z0 + band, r.x1 - band, r.z1 - band, M.weave);
   };
   bordered(R.lobby);
   floor(3.45, 8.45, 3.95, 9.29, M.borderStone, 0.001);
   bordered(R.entry);
   bordered(R.vestibule);
-  floor(R.passage.x0, 9.29, R.gallery.x0, 10.25, M.darkStone, 0.0015);
-  floor(R.step.x0, 9.29, R.step.x1, 10.25, M.paleStone, 0.002);
-  floor(R.gallery.x0, R.gallery.z0, R.gallery.x1, R.gallery.z1, M.darkStone, 0.0015);
-  floor(R.gallery.x0 + 0.15, 9.2, R.gallery.x1, 10.35, M.paleStone, 0.002);
+  floor(R.passage.x0, 9.29, R.step.x0, 10.25, M.darkStone);
+  floor(R.step.x1, 9.29, R.gallery.x0, 10.25, M.darkStone);
+  floor(R.step.x0, 9.29, R.step.x1, 10.25, M.paleStone);
+  floor(R.gallery.x0, R.gallery.z0, R.gallery.x1, 9.2, M.darkStone);
+  floor(R.gallery.x0, 10.35, R.gallery.x1, R.gallery.z1, M.darkStone);
+  floor(R.gallery.x0, 9.2, R.gallery.x0 + 0.15, 10.35, M.darkStone);
+  floor(R.gallery.x0 + 0.15, 9.2, R.gallery.x1, 10.35, M.paleStone);
   floor(R.library.x0, R.library.z0, R.library.x1, R.library.z1, M.boards, 0.0015);
   floor(R.powder.x0, R.powder.z0, R.powder.x1, R.powder.z1, M.marbleFloor, 0.0015);
   floor(R.stair.x0, R.stair.z0, R.stair.x1, R.stair.z1, M.limestoneFloor, 0.0015);
@@ -357,14 +363,14 @@ function materials() {
   const M = {};
   const std = (o) => new THREE.MeshStandardMaterial(o);
   const rep = (t, s) => { t = t.clone(); t.needsUpdate = true; t.repeat.set(1 / s, 1 / s); return t; };
-  M.weave = std({ map: rep(FT.basketweave(), 1.2), roughness: 0.38 });
-  M.borderStone = std({ map: rep(T.marble({ base: 0xcabfae, vein: 0x8d8174, vein2: 0xa89a89, scale: 3, seed: 13 }), 1.4), roughness: 0.35 });
+  M.weave = std({ map: rep(FT.basketweave(), 0.6), roughness: 0.38 });
+  M.borderStone = std({ map: rep(T.marble({ base: 0xcabfae, vein: 0x8d8174, vein2: 0xa89a89, scale: 3, seed: 13, size: 512 }), 1.4), roughness: 0.35 });
   M.darkStone = std({ map: rep(FT.tiles({ base: 0x5d5a55, tile: 0.6, seed: 4, vein: '200,195,185', veinA: 0.06 }), 1.2), roughness: 0.45 });
   M.paleStone = std({ map: rep(FT.tiles({ base: 0xd9d0c2, tile: 0.6, seed: 6, grout: 'rgba(120,110,95,0.6)', vein: '120,110,100', veinA: 0.08 }), 1.2), roughness: 0.45 });
   M.paleStoneSolid = std({ map: rep(T.limestone({ base: 0xddd3c3, band: 0xd0c4b1, seed: 8 }), 1.0), roughness: 0.6 });
   M.limestoneFloor = std({ map: rep(FT.tiles({ base: 0xd8ccb8, tile: 0.6, seed: 12, offset: true, grout: 'rgba(140,125,105,0.6)', vein: '140,120,100', veinA: 0.05 }), 1.2), roughness: 0.55 });
-  M.marbleFloor = std({ map: rep(T.marble({ base: 0xece6dc, seed: 19 }), 1.2), roughness: 0.3 });
-  M.marble = std({ map: rep(T.marble({ base: 0xefe9df, seed: 27, scale: 1.6 }), 1.0), roughness: 0.25 });
+  M.marbleFloor = std({ map: rep(T.marble({ base: 0xece6dc, seed: 19, size: 512 }), 1.2), roughness: 0.3 });
+  M.marble = std({ map: rep(T.marble({ base: 0xefe9df, seed: 27, scale: 1.6, size: 512 }), 1.0), roughness: 0.25 });
   M.boards = std({ map: rep(FT.boards(), 2.4), roughness: 0.55 });
   M.liftFloor = std({ color: 0x4a4038, roughness: 0.5 });
   M.diamond = std({ map: rep(FT.diamond(), 1.2), roughness: 0.35 });
@@ -375,7 +381,7 @@ function materials() {
   M.darkWood = std({ map: rep(T.woodGrain({ light: 0x5a4636, dark: 0x3a2c22, seed: 3 }), 1.0), roughness: 0.5 });
   M.oak = std({ map: rep(T.woodGrain({ light: 0xd2b48e, dark: 0xb39066, seed: 5 }), 1.0), roughness: 0.55 });
   M.oakDark = std({ color: 0x8f765a, roughness: 0.7 });
-  M.stoneTop = std({ map: rep(T.marble({ base: 0xe6ded2, vein: 0x7d7268, seed: 31 }), 1.0), roughness: 0.25 });
+  M.stoneTop = std({ map: rep(T.marble({ base: 0xe6ded2, vein: 0x7d7268, seed: 31, size: 512 }), 1.0), roughness: 0.25 });
   M.ceramic = std({ color: 0xece6dc, roughness: 0.35 });
   M.ceramicDark = std({ color: 0x6f5f50, roughness: 0.6 });
   M.branch = std({ color: 0x4e4234, roughness: 0.9 });

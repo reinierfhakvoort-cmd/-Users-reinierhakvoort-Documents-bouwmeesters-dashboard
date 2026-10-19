@@ -19,7 +19,7 @@ export const OPENINGS = {
   northWindowWest: { x0: 0.45, x1: 1.75, sill: 0.95, head: 3.1 },
   frenchDoor: { x0: 2.65, x1: 3.95, head: 3.1 },
   bay: { x0: 5.4, x1: 8.6, top: 3.05, r: 0.45, frame: 0.15 },      // opening in the garden wall
-  bayInner: { x0: 5.3, x1: 8.7 },                                   // alcove interior (depth KDL.bay.depth)
+  bayInner: { x0: 5.05, x1: 8.95 },                                   // alcove interior (depth KDL.bay.depth)
   livingWindows: [{ x0: 10.05, x1: 11.35 }, { x0: 12.25, x1: 13.55 }],
   southArches: [{ x0: 4.95, x1: 6.25 }, { x0: 7.75, x1: 9.05 }],    // arched openings to the hall, top 2.95
   archTop: 2.95,
@@ -46,11 +46,11 @@ export async function build(ctx) {
   MAT.limestone = new THREE.MeshStandardMaterial({ map: limeTex, roughness: 0.85 });
   MAT.trim = new THREE.MeshStandardMaterial({ color: 0xe6ddcf, roughness: 0.7 });
   MAT.ceiling = new THREE.MeshStandardMaterial({ color: 0xebe4d8, roughness: 0.95 });
-  MAT.floor = new THREE.MeshStandardMaterial({ map: floorTex, roughness: 0.5, color: 0xf2ece4 });
+  MAT.floor = new THREE.MeshStandardMaterial({ map: floorTex, roughness: 0.5, color: 0xe2d4c4 });
   const stoneTex = T.limestone({ base: 0xe4dacb, band: 0xd8ccb9 });
   stoneTex.repeat.set(0.5, 0.5);
   MAT.stone = new THREE.MeshStandardMaterial({ map: stoneTex, roughness: 0.55 });
-  MAT.frame = new THREE.MeshStandardMaterial({ color: 0x776b5d, roughness: 0.55 });          // taupe painted timber
+  MAT.frame = new THREE.MeshStandardMaterial({ color: 0x8a7e6e, roughness: 0.55 });          // taupe painted timber
   MAT.frameLight = new THREE.MeshStandardMaterial({ color: 0xd8d3c9, roughness: 0.45, metalness: 0.15 }); // bay steel, pale
   MAT.glass = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.05, metalness: 0, transparent: true, opacity: 0.07, depthWrite: false });
   MAT.bronze = new THREE.MeshStandardMaterial({ color: 0x4a3c2e, roughness: 0.4, metalness: 0.8 });
@@ -58,7 +58,7 @@ export async function build(ctx) {
   const linenTex = T.linen({ base: 0xb3a18a });
   linenTex.repeat.set(3, 1);
   MAT.linen = new THREE.MeshStandardMaterial({ map: linenTex, roughness: 0.95, side: THREE.DoubleSide });
-  MAT.alabaster = new THREE.MeshStandardMaterial({ color: 0xf6e6cf, emissive: 0xffc98e, emissiveIntensity: 1.6, roughness: 0.6 });
+  MAT.alabaster = new THREE.MeshStandardMaterial({ color: 0xf6e6cf, emissive: 0xffbf80, emissiveIntensity: 1.1, roughness: 0.6 });
 
   // ---------- floor ----------
   const floorGeo = new THREE.PlaneGeometry(L, D);
@@ -208,6 +208,15 @@ export async function build(ctx) {
     group.add(boxMinMax(bx - 0.32, 0, z1 - 0.1, bx + 0.32, H - 0.16, z1, MAT.limestone));
     ctx.addColliderBox(bx - 0.32, z1 - 0.1, bx + 0.32, z1);
   }
+  // Ceiling panels: a slim bead moulding inset from the walls and the beams in each zone.
+  const ins = 0.42, bead = 0.045;
+  for (const [a, b] of [[x0, KDL.kitchenEnd - 0.2], [KDL.kitchenEnd + 0.2, KDL.diningEnd - 0.2], [KDL.diningEnd + 0.2, x1]]) {
+    const ax = a + ins, bx2 = b - ins, az = z0 + ins, bz2 = z1 - ins;
+    group.add(boxMinMax(ax, H - 0.03, az, bx2, H, az + bead, MAT.trim, { cast: false }));
+    group.add(boxMinMax(ax, H - 0.03, bz2 - bead, bx2, H, bz2, MAT.trim, { cast: false }));
+    group.add(boxMinMax(ax, H - 0.03, az, ax + bead, H, bz2, MAT.trim, { cast: false }));
+    group.add(boxMinMax(bx2 - bead, H - 0.03, az, bx2, H, bz2, MAT.trim, { cast: false }));
+  }
 
   // ---------- curtains (linen, floor length, garden wall) ----------
   curtain(group, nw.x1 - 0.06, fd.x0 + 0.06, z0 + 0.1, H - 0.2);
@@ -217,12 +226,12 @@ export async function build(ctx) {
   const sconceLights = [];
   for (const sx of O.sconces) {
     const g = new THREE.Group();
-    g.add(boxMinMax(-0.055, -0.24, 0, 0.055, 0.24, 0.02, MAT.bronze));
-    for (const y of [-0.115, 0.115]) {
-      g.add(boxMinMax(-0.05, y - 0.1, 0.02, 0.05, y + 0.1, 0.075, MAT.alabaster, { cast: false }));
-      g.add(boxMinMax(-0.058, y - 0.11, 0.015, 0.058, y - 0.1, 0.08, MAT.bronze));
+    g.add(boxMinMax(-0.02, -0.2, 0, 0.02, 0.2, 0.03, MAT.bronze));
+    for (const y of [-0.1, 0.1]) {
+      g.add(boxMinMax(-0.065, y - 0.085, 0.03, 0.065, y + 0.085, 0.09, MAT.alabaster, { cast: false }));
+      g.add(boxMinMax(-0.067, y - 0.092, 0.028, 0.067, y - 0.085, 0.092, MAT.bronze));
+      g.add(boxMinMax(-0.067, y + 0.085, 0.028, 0.067, y + 0.092, 0.092, MAT.bronze));
     }
-    g.add(boxMinMax(-0.058, 0.215, 0.015, 0.058, 0.225, 0.08, MAT.bronze));
     g.position.set(sx, 1.75, z0);
     group.add(g);
     const l = new THREE.PointLight(0xffc690, 0.9, 3.0, 2);
@@ -271,9 +280,9 @@ export async function build(ctx) {
   RectAreaLightUniformsLib.init();
   const pmrem = new THREE.PMREMGenerator(renderer);
   scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-  scene.environmentIntensity = 0.32;
+  scene.environmentIntensity = 0.22;
   scene.background = new THREE.Color(0xdfe4d8);
-  group.add(new THREE.HemisphereLight(0xf2efe8, 0xa38b6c, 0.55));
+  group.add(new THREE.HemisphereLight(0xefe9de, 0x9a8162, 0.4));
 
   const skyCol = 0xf1f1ec;
   const addWindowLight = (cx, cy, cz, w, h, intensity, face = 'n') => {
@@ -290,7 +299,7 @@ export async function build(ctx) {
   addWindowLight(bi.x0 - 0.02, (gl0 + gl1) / 2, (bz + z0) / 2, bay.depth - 0.4, gl1 - gl0, 3, 'w');
   addWindowLight(bi.x1 + 0.02, (gl0 + gl1) / 2, (bz + z0) / 2, bay.depth - 0.4, gl1 - gl0, 3, 'e');
 
-  const sun = new THREE.DirectionalLight(0xfff1df, 1.3);
+  const sun = new THREE.DirectionalLight(0xfff0dc, 0.75);
   sun.position.set(2.5, 7.5, -9); sun.target.position.set(7.5, 0, 2.5);
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);

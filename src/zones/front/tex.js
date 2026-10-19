@@ -43,7 +43,7 @@ export function basketweave({ size = 1024, seed = 3 } = {}) {
     const [c, g] = canvas(size);
     const r = rng(seed);
     const px = size / 1.2;
-    const A = hex(0xe9e0d1), B = hex(0xcfc6b9);
+    const A = hex(0xebe3d5), B = hex(0xd3cbbe);
     for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++) {
       const horiz = (i + j) % 2 === 0;
       for (let k = 0; k < 2; k++) {
