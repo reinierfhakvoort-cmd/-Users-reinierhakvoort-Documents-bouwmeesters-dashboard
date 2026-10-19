@@ -45,15 +45,16 @@ async function makeMaterials() {
   M.marbleBook = new THREE.MeshStandardMaterial({ map: b0, roughness: 0.2 });
   M.marbleBook2 = new THREE.MeshStandardMaterial({ map: b1, roughness: 0.2 });
   M.marbleIsland = new THREE.MeshStandardMaterial({ map: m2, roughness: 0.25 });
-  const oakTex = T.woodGrain({ light: 0xdcc3a5, dark: 0xc6a685, seed: 17, rings: 14 });
+  const oakTex = T.woodGrain({ light: 0xdcc6ae, dark: 0xcbb097, seed: 17, rings: 44 });
   oakTex.repeat.set(0.9, 0.5);
   M.oak = new THREE.MeshStandardMaterial({ map: oakTex, roughness: 0.62 });
-  M.oakIn = new THREE.MeshStandardMaterial({ map: oakTex, color: 0xb9a48f, roughness: 0.7 });
+  M.oakIn = new THREE.MeshStandardMaterial({ map: oakTex, color: 0xe4d6c8, roughness: 0.7 });
+  M.wineBack = new THREE.MeshStandardMaterial({ color: 0x5e4d40, roughness: 0.8 });
   M.groove = new THREE.MeshStandardMaterial({ color: 0x7a6250, roughness: 0.9 });
   const darkTex = T.woodGrain({ light: 0x4a3628, dark: 0x2e2019, seed: 29, rings: 22 });
   M.darkWood = new THREE.MeshStandardMaterial({ map: darkTex, roughness: 0.5 });
   M.trim = new THREE.MeshStandardMaterial({ color: 0x3a2c24, roughness: 0.45, metalness: 0.1 });
-  const bou = T.boucle({ base: 0xe8e0d2, seed: 61 });
+  const bou = T.boucle({ base: 0xe0d6c6, seed: 61 });
   bou.map.repeat.set(3, 3); bou.bump.repeat.set(3, 3);
   M.cream = new THREE.MeshStandardMaterial({ map: bou.map, bumpMap: bou.bump, bumpScale: 0.6, roughness: 0.95 });
   M.steel = new THREE.MeshStandardMaterial({ color: 0xc9c6c0, roughness: 0.28, metalness: 0.9 });
@@ -267,7 +268,7 @@ function southJoinery(g, M) {
   shakerDoor(g, F, w0, (w0 + w1) / 2, wy1, H, D, M, {});
   shakerDoor(g, F, (w0 + w1) / 2, w1, wy1, H, D, M, {});
   const back = 0.2; // interior back at d = back
-  g.add(ubox(F, w0, w1, wy0, wy1, 0, back, M.oakIn));
+  g.add(ubox(F, w0, w1, wy0, wy1, 0, back, M.wineBack));
   g.add(ubox(F, w0, w0 + 0.05, wy0, wy1, back, D, M.oak));
   g.add(ubox(F, w1 - 0.05, w1, wy0, wy1, back, D, M.oak));
   g.add(ubox(F, w0, w1, wy0, wy0 + 0.04, back, D, M.oak));
@@ -316,7 +317,7 @@ function southJoinery(g, M) {
   // cabinet interior light
   g.add(ubox(F, w0 + 0.06, w1 - 0.06, wy1 - 0.048, wy1 - 0.04, D - 0.2, D - 0.12, M.glow, { cast: false }));
   // end panel of the run (east side) and a top cap so there is no gap to the ceiling
-  g.add(ubox(F, r1, r1 + 0.03, 0, H, 0, D, M.oakIn));
+  g.add(ubox(F, r1, r1 + 0.03, 0, H, 0, D, M.oak));
   g.add(ubox(F, r0, r1 + 0.03, H, 3.4, 0, D - 0.18, M.oakIn, { cast: false }));
 }
 
@@ -349,7 +350,7 @@ function islandOutline(x0, z0, x1, z1, rE, rW, seg = 14) {
 }
 
 function island(g, M) {
-  const I = K.island, top = 0.035, band = 0.025;
+  const I = K.island, top = 0.035, band = 0.035;
   const bodyH = I.h - top - band;
   // marble body with curved ends
   const body = extrudePlan(islandOutline(I.x0 + 0.04, I.z0 + 0.02, I.x1 - 0.18, I.z1 - 0.02, 0.42, 0.06), bodyH, M.marbleIsland);
@@ -423,7 +424,7 @@ function stool(M) {
   const R = 0.9, ang = (w + 0.02) / R;
   arc.absarc(0, 0, R + 0.035, Math.PI / 2 - ang / 2, Math.PI / 2 + ang / 2, false);
   arc.absarc(0, 0, R - 0.035, Math.PI / 2 + ang / 2, Math.PI / 2 - ang / 2, true);
-  const bg = new THREE.ExtrudeGeometry(arc, { depth: 0.17, bevelEnabled: true, bevelSize: 0.015, bevelThickness: 0.02, bevelSegments: 3, curveSegments: 16 });
+  const bg = new THREE.ExtrudeGeometry(arc, { depth: 0.12, bevelEnabled: true, bevelSize: 0.015, bevelThickness: 0.02, bevelSegments: 3, curveSegments: 16 });
   bg.rotateX(Math.PI / 2); // plan arc, extruded downward
   const back = new THREE.Mesh(bg, M.cream); back.castShadow = true;
   back.position.set(0, backH - 0.005, d / 2 - R); s.add(back);
@@ -437,7 +438,7 @@ function stool(M) {
 function sprig(M, height, leaves, branches, seed = 3) {
   const r = T.rng(seed);
   const grp = new THREE.Group();
-  const leafGeo = new THREE.PlaneGeometry(0.012, 0.04); leafGeo.translate(0, 0.02, 0);
+  const leafGeo = new THREE.PlaneGeometry(0.016, 0.05); leafGeo.translate(0, 0.025, 0);
   const inst = new THREE.InstancedMesh(leafGeo, M.leaf, leaves * branches);
   const d = new THREE.Object3D(); let k = 0;
   for (let b = 0; b < branches; b++) {
@@ -467,7 +468,7 @@ function accessories(g, M) {
   const vase = lathe([[0, 0], [0.05, 0], [0.075, 0.05], [0.08, 0.1], [0.06, 0.17], [0.03, 0.2], [0.032, 0.215], [0, 0.215]], M.ceramic, 28);
   vase.position.set(2.5, I.h, 3.55); g.add(vase);
   const pl = new THREE.Group();
-  const big = sprig(M, 0.75, 70, 7, 11); big.scale.set(1.25, 1, 1.25); pl.add(big);
+  const big = sprig(M, 0.7, 90, 11, 11); big.scale.set(1.25, 1, 1.25); pl.add(big);
   pl.position.set(2.5, I.h + 0.19, 3.55); g.add(pl);
   // shallow bowl with lemons
   const bowl = lathe([[0, 0], [0.08, 0], [0.16, 0.035], [0.17, 0.045], [0.16, 0.045], [0.08, 0.01], [0, 0.01]], M.trim, 28);
